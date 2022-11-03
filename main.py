@@ -9,8 +9,12 @@ def pixel(x, y, color):
     glDisable(GL_SCISSOR_TEST)
 
 pygame.init()
+size = 4
+pixels = []
 
-screen = pygame.display.set_mode((800, 600), pygame.OPENGL | pygame.DOUBLEBUF)
+screen = pygame.display.set_mode((100*size, 100*size), pygame.OPENGL | pygame.DOUBLEBUF)
+
+
 running = True
 x = 0
 speed = 1
