@@ -6,7 +6,8 @@ WHITE = (255, 255, 255)
 
 SKY = (50, 100, 200)
 GROUND = (200, 200, 100)
-TRASPARENT = (152 ,0 ,136, 255)
+TRASPARENT = (152 , 0,136, 255)
+GERUDO_SKY = (255, 165, 0)
 
 colors = [
     (0, 20, 10),
@@ -20,8 +21,9 @@ colors = [
 wall1 = pygame.image.load('./wall.png')
 
 sprite1 = pygame.image.load('./down.png')
+sprite2 = pygame.image.load('./space_sprite.jpg')
 
-starts = pygame.image.load('./start.jpg')
+starts = pygame.image.load('./introscreen.jpg')
 ends = pygame.image.load('./end.jpg')
 
 
@@ -57,9 +59,10 @@ class Raycaster(object):
     def __init__(self, screen):
         self.screen = screen
         x, y, self.width, self.height = screen.get_rect()
-        self.block_size = 15
+        self.block_size = 50
         self.score = 0
         self.map = []
+        self.last_angle = 0
         self.player = {
             "x": int(self.block_size + (self.block_size / 2)),
             "y": int(self.block_size + (self.block_size / 2)),
@@ -102,7 +105,7 @@ class Raycaster(object):
         font = pygame.font.SysFont('Arial', 16)
         fps = str(round(clock.get_fps(), 3))
         fps_text = font.render(fps, 1, pygame.Color("black"))
-        return self.screen.blit(fps_text, (self.width - 30, self.height - 30))
+        return self.screen.blit(fps_text, (self.width - 40, self.height - 40))
 
     def cast_ray(self, a):
         d = 0
@@ -133,8 +136,8 @@ class Raycaster(object):
             d += 1
 
     def draw_map(self):
-        for x in range(0, 150, self.block_size):
-            for y in range(0, 150, self.block_size):
+        for x in range(0, 500, self.block_size):
+            for y in range(0, 500, self.block_size):
                 i = int(x / self.block_size)
                 j = int(y / self.block_size)
 
@@ -164,7 +167,7 @@ class Raycaster(object):
             + sprite_size/2)
 
         sprite_y = int(self.height/2 - sprite_size/2)
-        
+
         for x in range(sprite_x, sprite_x + sprite_size):
             for y in range(sprite_y, sprite_y + sprite_size):
                 tx = int((x - sprite_x) * 128 / sprite_size)
@@ -331,7 +334,7 @@ class Raycaster(object):
             for y in range(250, 251):
                 tx = int((x - sprite_x) * 128 / sprite_size)
                 ty = int((y - sprite_y) * 128 / sprite_size)
-                
+
                 try:
                     c = sprite["sprite"].get_at((tx, ty))
                 except:
@@ -352,12 +355,14 @@ class Raycaster(object):
 pygame.init()
 screen = pygame.display.set_mode((1000, 500))
 r = Raycaster(screen)
-r.load_map('map.txt')
 pygame.mixer.init()
 pygame.mixer.music.load("./Lost_Woods.mp3")
 pygame.mixer.music.set_volume(0.3)
 pygame.mixer.music.play(-1)
 get_sound = pygame.mixer.Sound('./Collect_sound.mp3')
+end = False
+running = False
+running2 = False
 
 start = True
 while start:
@@ -370,14 +375,21 @@ while start:
         if event.type == pygame.QUIT:
             start = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN:
+            if event.key == pygame.K_1:
                 start = False
+                r.load_map('map.txt')
+                running = True
+            elif event.key == pygame.K_2:
+                start = False
+                r.load_map('map2.txt')
+                running2 = True
 clock = pygame.time.Clock()
 
-running = True
+
 while running:
     if r.score == 3:
         running = False
+        end = True
     
     screen.fill(BLACK)
     screen.fill(SKY, (r.width / 2, 0, r.width, r.height / 2))
@@ -391,17 +403,25 @@ while running:
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
             running = False
+        
+        if (event.type == pygame.MOUSEMOTION):
+            r.player["a"] += event.rel[0] * 5 / (r.width / 2) 
 
         if (event.type == pygame.KEYDOWN):
 
             if event.key == pygame.K_a:
                 r.player["a"] = (r.player["a"] - pi / 4)% (2 * pi)
+                r.last_angle = r.player["a"]
             if event.key == pygame.K_d:
                 r.player["a"] = (r.player["a"] + pi / 4)% (2 * pi)
+                r.last_angle = r.player["a"]
             if event.key == pygame.K_SPACE:
                 for i in enemies:
                     if i != None:
                         r.collect(i)
+            if event.key == pygame.K_f:
+                print("no funciono tu idea")
+                r.player["a"] = r.last_angle
 
 
             if event.key == pygame.K_RIGHT:
@@ -493,8 +513,133 @@ while running:
                     r.player["x"] -= 10
                     r.player["y"] += 10
     clock.tick()
-    print(clock.get_fps())
-end = True
+
+while running2:
+    if r.score == 3:
+        running2 = False
+        end = True
+    
+    screen.fill(BLACK)
+    screen.fill(GERUDO_SKY, (r.width / 2, 0, r.width, r.height / 2))
+    screen.fill(GROUND, (r.width / 2, r.height / 2, r.width, r.height))
+    r.clearZ()
+    r.display_fps(clock)
+    r.render()
+
+    pygame.display.flip()
+    
+    for event in pygame.event.get():
+        if (event.type == pygame.QUIT):
+            running2 = False
+        
+        if (event.type == pygame.MOUSEMOTION):
+            r.player["a"] -= event.rel[0] * 5 / (r.width / 2)
+
+        if (event.type == pygame.KEYDOWN):
+
+            if event.key == pygame.K_a:
+                r.player["a"] = (r.player["a"] - pi / 4)% (2 * pi)
+            if event.key == pygame.K_d:
+                r.player["a"] = (r.player["a"] + pi / 4)% (2 * pi)
+            if event.key == pygame.K_SPACE:
+                for i in enemies:
+                    if i != None:
+                        r.collect(i)
+            if event.key == pygame.K_f:
+                print("no funciono tu idea")
+                r.player["a"] = r.last_angle
+
+
+            if event.key == pygame.K_RIGHT:
+                r.last_move = "right"
+                if r.player["a"] == 0:
+                    r.player["y"] += 10
+                if abs(r.player["a"]) == pi/4:
+                    r.player["x"] -= 10
+                    r.player["y"] += 10
+                if abs(r.player["a"]) == pi/2:
+                    r.player["x"] -= 10
+                if abs(r.player["a"]) == 3*pi/4:
+                    r.player["x"] -= 10
+                    r.player["y"] -= 10
+                if abs(r.player["a"]) == pi:
+                    r.player["y"] -= 10
+                if abs(r.player["a"]) == 5*pi/4:
+                    r.player["x"] += 10
+                    r.player["y"] -= 10
+                if abs(r.player["a"]) == 3*pi/2:
+                    r.player["x"] += 10
+                if abs(r.player["a"]) == 7*pi/4:
+                    r.player["x"] += 10
+                    r.player["y"] += 10
+            if event.key == pygame.K_LEFT:
+                r.last_move = "left"
+                if r.player["a"] == 0:
+                    r.player["y"] -= 10
+                if abs(r.player["a"]) == pi/4:
+                    r.player["x"] += 10
+                    r.player["y"] -= 10
+                if abs(r.player["a"]) == pi/2:
+                    r.player["x"] += 10
+                if abs(r.player["a"]) == 3*pi/4:
+                    r.player["x"] += 10
+                    r.player["y"] += 10
+                if abs(r.player["a"]) == pi:
+                    r.player["y"] += 10
+                if abs(r.player["a"]) == 5*pi/4:
+                    r.player["x"] -= 10
+                    r.player["y"] += 10
+                if abs(r.player["a"]) == 3*pi/2:
+                    r.player["x"] -= 10
+                if abs(r.player["a"]) == 7*pi/4:
+                    r.player["x"] -= 10
+                    r.player["y"] -= 10
+            if event.key == pygame.K_UP:
+                r.last_move = "up"
+                if r.player["a"] == 0:
+                    r.player["x"] += 10
+                if abs(r.player["a"]) == pi/4:
+                    r.player["x"] += 10
+                    r.player["y"] += 10
+                if abs(r.player["a"]) == pi/2:
+                    r.player["y"] += 10
+                if abs(r.player["a"]) == 3*pi/4:
+                    r.player["x"] -= 10
+                    r.player["y"] += 10
+                if abs(r.player["a"]) == pi:
+                    r.player["x"] -= 10
+                if abs(r.player["a"]) == 5*pi/4:
+                    r.player["x"] -= 10
+                    r.player["y"] -= 10
+                if abs(r.player["a"]) == 3*pi/2:
+                    r.player["y"] -= 10
+                if abs(r.player["a"]) == 7*pi/4:
+                    r.player["x"] += 10
+                    r.player["y"] -= 10
+            if event.key == pygame.K_DOWN:
+                r.last_move = "down"
+                if r.player["a"] == 0:
+                    r.player["x"] -= 10
+                if abs(r.player["a"]) == pi/4:
+                    r.player["x"] -= 10
+                    r.player["y"] -= 10
+                if abs(r.player["a"]) == pi/2:
+                    r.player["y"] -= 10
+                if abs(r.player["a"]) == 3*pi/4:
+                    r.player["x"] += 10
+                    r.player["y"] -= 10
+                if abs(r.player["a"]) == pi:
+                    r.player["x"] += 10
+                if abs(r.player["a"]) == 5*pi/4:
+                    r.player["x"] += 10
+                    r.player["y"] += 10
+                if abs(r.player["a"]) == 3*pi/2:
+                    r.player["y"] += 10
+                if abs(r.player["a"]) == 7*pi/4:
+                    r.player["x"] -= 10
+                    r.player["y"] += 10
+    clock.tick()
+
 while end:
     for x  in range(r.width):
         for y in range(r.height):
