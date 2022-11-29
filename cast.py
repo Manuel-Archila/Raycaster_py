@@ -420,7 +420,6 @@ while running:
                     if i != None:
                         r.collect(i)
             if event.key == pygame.K_f:
-                print("no funciono tu idea")
                 r.player["a"] = r.last_angle
 
 
@@ -546,7 +545,6 @@ while running2:
                     if i != None:
                         r.collect(i)
             if event.key == pygame.K_f:
-                print("no funciono tu idea")
                 r.player["a"] = r.last_angle
 
 
